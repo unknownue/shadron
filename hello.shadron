@@ -1,0 +1,8 @@
+
+glsl vec4 hello_main(vec2 pos) {
+    vec2 uv = (pos - 0.5) * shadron_Aspect;
+    vec3 col = 0.5 + 0.5 * cos(shadron_Time + uv.xyx + vec3(0.0, 2.0, 4.0));
+    return vec4(col, 1.0);
+}
+
+animation HelloShadron = glsl(hello_main, 1980, 1024): resizable(false);
