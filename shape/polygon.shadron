@@ -1,0 +1,34 @@
+
+#include <math_constants>
+
+// Number of edge of polygon
+parameter float num_edge = 6.0: range(1.0, 12.0);
+// Distance to center of each polygon edge
+parameter float radius = 0.25;
+parameter float expand = 0.02;
+
+parameter float rotate_angle = 0.0: range(0.0, 360.0);
+
+vec2 aspect_idependent_uv(vec2 pos) {
+    vec2 fragCoord = pos * shadron_Dimensions;
+    return (fragCoord - 0.5 * shadron_Dimensions) / shadron_Dimensions.y;
+}
+
+float radian(float a) {
+    return a / 360.0 * 2.0 * PI;
+}
+
+float polygon_shape(vec2 pos, float r, float e, float num_slice) {
+    float a = atan(pos.x, pos.y) + radian(rotate_angle);
+    float s = 2.0 * PI / num_slice;
+    
+    return smoothstep(r - e, r + e, cos(floor(0.5 + a / s) * s - a) * length(pos));
+}
+
+glsl vec4 polygon_main(vec2 pos) {
+    vec2 uv = aspect_idependent_uv(pos);  // [-0.5, 0.5]
+    float c = polygon_shape(uv, radius, expand, num_edge);
+    return vec4(c, c, c, 1.0);
+}
+
+image PolygonBullet = glsl(polygon_main, 2048, 1024): resizable(false);
