@@ -1,0 +1,27 @@
+
+#include <math_constants>
+
+parameter float width = 0.004: range(0.001, 0.2);
+parameter vec2 origin = vec2(0.0, 0.0): range(-1.0, 1.0);
+
+const float BASIC_ROTATE = PI / 2.0;
+
+vec2 aspect_idependent_uv(vec2 pos) {
+    vec2 fragCoord = pos * shadron_Dimensions;
+    return (fragCoord - 0.5 * shadron_Dimensions) / shadron_Dimensions.y;
+}
+
+glsl vec4 line_main(vec2 pos) {
+    vec2 uv = aspect_idependent_uv(pos);
+    
+    float angle = PI / 6.0 + BASIC_ROTATE;
+    vec2 p = uv;
+    vec2 n = vec2(cos(angle), sin(angle));
+    float d = dot(p - origin, n);
+    
+    d = abs(d);
+    float c = smoothstep(fwidth(d), 0.0, d - width);
+    return vec4(c, c, c, 1.0);
+}
+
+image DrawLine = glsl(line_main, 1980, 1024): resizable(false);
