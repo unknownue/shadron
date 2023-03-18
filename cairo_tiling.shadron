@@ -1,0 +1,84 @@
+
+#include <math_constants>
+
+parameter bool isShowGrid = true;
+parameter float width1 = 0.004: range(0.001, 0.2);
+parameter float width2 = 0.01: range(0.0, 0.1);
+parameter float angle = 30.0: range(0.0, 90.0);
+
+const vec2 origin = vec2(0.5, 0.5);
+const float BASIC_ROTATE = PI / 2.0;
+
+vec2 aspect_idependent_uv(vec2 pos) {
+    vec2 fragCoord = pos * shadron_Dimensions;
+    return (fragCoord - 0.5 * shadron_Dimensions) / shadron_Dimensions.y;
+}
+
+// Hash function taken from https://www.shadertoy.com/view/XlGcRh
+float hashwithoutsine12(vec2 p) {
+	vec3 p3  = fract(vec3(p.xyx) * .1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
+vec3 cairo_tiling(vec2 uv, float a) {
+    vec2 cell_id = floor(uv);
+    float check = mod(cell_id.x + cell_id.y, 2.0); // 0 or 1
+
+    uv = fract(uv) - 0.5;  // [-0.5, 0.5]
+    vec2 p = abs(uv);
+
+    if (check == 1.0)
+        p = p.yx;
+
+    vec2 n = vec2(cos(a), sin(a));
+    float d = dot(p - origin, n);
+
+    if (d * (check - 0.5) < 0.0)
+        cell_id.x += sign(uv.x) * 0.5;
+    else
+        cell_id.y += sign(uv.y) * 0.5;
+    
+    d = min(d, p.x);
+    d = max(d, -p.y);
+    d = abs(d);
+    d = min(d, dot(p - origin, vec2(n.y, -n.x)));
+
+    return vec3(cell_id, d);
+}
+
+glsl vec4 cairo_tiling_main(vec2 pos) {
+    vec2 uv = aspect_idependent_uv(pos);
+    float a = angle / 180.0 * PI - BASIC_ROTATE;
+
+    uv *= 4.2;
+    uv.y += shadron_Time;
+    
+    vec3 cairo = cairo_tiling(uv, a);
+    vec2 cell_id = cairo.xy;
+    float d = cairo.z;
+
+    float c1 = smoothstep(fwidth(d), 0.0, d - width1);
+    c1 += d;  // add gradient
+    
+    float c;
+    if (isShowGrid) {
+        float c2;
+        uv = fract(uv) - 0.5;
+        if (max(abs(uv).x, abs(uv).y) > 0.5 - width2) {
+            c2 = 0.5;
+        } else {
+            c2 = 0.0;
+        }
+        c = max(c1, c2);
+    } else {
+        c = c1;
+    }
+    
+    float r = hashwithoutsine12(cell_id);
+    c += r;
+
+    return vec4(c, c, c, 1.0);
+}
+
+animation CairoTiling = glsl(cairo_tiling_main, 1980, 1024): resizable(false);
