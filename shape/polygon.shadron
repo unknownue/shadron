@@ -31,4 +31,4 @@ glsl vec4 polygon_main(vec2 pos) {
     return vec4(c, c, c, 1.0);
 }
 
-image PolygonBullet = glsl(polygon_main, 2048, 1024): resizable(false);
+image PolygonShape = glsl(polygon_main, 2048, 1024): resizable(false);
